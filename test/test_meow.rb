@@ -24,6 +24,14 @@ class MeowTest < Test::Unit::TestCase
     }
   end
 
+  def test_meow_can_notify_with_priority
+    meep = Meow.new('Meow Test')
+    meep.register(['Notify'])
+    assert_nothing_raised {
+      meep.notify('Notify', 'Title', 'Description', :priority => :very_high)
+    }
+  end
+
   def test_meow_can_notify_without_register
     meep = Meow.new('Meow Test')
     assert_nothing_raised {

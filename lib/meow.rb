@@ -2,6 +2,12 @@ require 'osx/cocoa'
 
 class Meow
   VERSION = '1.0.0'
+  PRIORITIES = {  :very_low   => -2,
+                  :moderate   => -1,
+                  :normal     =>  0,
+                  :high       =>  1,
+                  :emergency  =>  2,
+  }
 
   attr_accessor :name, :note_types, :icon
   def initialize(name, icon = OSX::NSWorkspace.sharedWorkspace().iconForFileType_('rb'))
@@ -43,6 +49,10 @@ class Meow
 
     notification['NotificationAppIcon'] = options[:app_icon].TIFFRepresentation if options[:app_icon]
     notification['NotificationSticky'] = OSX::NSNumber.numberWithBool_(true) if options[:stick]
+
+    if options[:priority]
+      notification['NotificationPriority'] = OSX::NSNumber.numberWithInt_(PRIORITIES[options[:priority]])
+    end
 
     d = OSX::NSDictionary.dictionaryWithDictionary_(notification)
     notify_center = OSX::NSDistributedNotificationCenter.defaultCenter
