@@ -9,6 +9,12 @@ class Meow
                   :emergency  =>  2,
   }
 
+  class << self
+    def notify(name, title, description, opts = {})
+      new(name).notify(title, description, opts)
+    end
+  end
+
   attr_accessor :name, :note_type, :icon
   def initialize(name, note_type = 'Note', icon = OSX::NSWorkspace.sharedWorkspace().iconForFileType_('rb'))
     @name       = name
@@ -45,6 +51,8 @@ class Meow
     notify_center = OSX::NSDistributedNotificationCenter.defaultCenter
     notify_center.postNotificationName_object_userInfo_deliverImmediately_('GrowlNotification', nil, d, true)
   end
+
+  private
 
   def register(types, default_types = nil)
     types = [types].flatten

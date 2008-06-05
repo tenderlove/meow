@@ -9,6 +9,12 @@ class MeowTest < Test::Unit::TestCase
     assert_not_nil(meep)
   end
 
+  def test_meow_has_static_method
+    assert_nothing_raised {
+      Meow.notify('Meow Test', 'Title', 'Description', :priority => :very_high)
+    }
+  end
+
   def test_meow_can_notify_with_type
     meep = Meow.new('Meow Test')
     assert_nothing_raised {
