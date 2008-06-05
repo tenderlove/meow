@@ -4,38 +4,29 @@ class MeowTest < Test::Unit::TestCase
   def test_initialize
     meep = nil
     assert_nothing_raised {
-      meep = Meow.new('Meow Test', ['Notify'])
+      meep = Meow.new('Meow Test')
     }
     assert_not_nil(meep)
   end
 
-  def test_meow_can_register
+  def test_meow_can_notify_with_type
     meep = Meow.new('Meow Test')
     assert_nothing_raised {
-      meep.register(['Notify'])
-    }
-  end
-
-  def test_meow_can_notify
-    meep = Meow.new('Meow Test')
-    meep.register(['Notify'])
-    assert_nothing_raised {
-      meep.notify('Notify', 'Title', 'Description')
+      meep.notify('Title', 'Description', :type => 'Awesome')
     }
   end
 
   def test_meow_can_notify_with_priority
     meep = Meow.new('Meow Test')
-    meep.register(['Notify'])
     assert_nothing_raised {
-      meep.notify('Notify', 'Title', 'Description', :priority => :very_high)
+      meep.notify('Title', 'Description', :priority => :very_high)
     }
   end
 
   def test_meow_can_notify_without_register
     meep = Meow.new('Meow Test')
     assert_nothing_raised {
-      meep.notify('Notify', 'Title', 'Description')
+      meep.notify('Title', 'Description')
     }
   end
 end
