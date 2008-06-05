@@ -1,7 +1,9 @@
-History.txt
+CHANGELOG.rdoc
 Manifest.txt
-README.txt
+README.rdoc
 Rakefile
 bin/meow
 lib/meow.rb
+test/helper.rb
 test/test_meow.rb
+vendor/hoe.rb

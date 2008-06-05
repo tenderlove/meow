@@ -312,7 +312,7 @@ class Hoe
     self.extra_deps = []
     self.need_tar = true
     self.need_zip = false
-    self.rdoc_pattern = /^(lib|bin|ext)|txt$/
+    self.rdoc_pattern = /^(lib|bin|ext)|(txt|rdoc)$/
     self.remote_rdoc_dir = name
     self.rsync_args = '-av --delete'
     self.rubyforge_name = name.downcase
@@ -562,7 +562,7 @@ class Hoe
     # Doco
 
     Rake::RDocTask.new(:docs) do |rd|
-      rd.main = "README.txt"
+      rd.main = self.readme
       rd.options << '-d' if RUBY_PLATFORM !~ /win32/ and `which dot` =~ /\/dot/ and not ENV['NODOT']
       rd.rdoc_dir = 'doc'
       files = spec.files.grep(rdoc_pattern)
