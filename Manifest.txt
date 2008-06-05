@@ -2,7 +2,6 @@ CHANGELOG.rdoc
 Manifest.txt
 README.rdoc
 Rakefile
-bin/meow
 lib/meow.rb
 meow.gemspec
 test/helper.rb
