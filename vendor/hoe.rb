@@ -367,8 +367,6 @@ class Hoe
       hoe_deps.each do |pkg, vers|
         extra_deps << [pkg, vers]
       end
-    else
-      extra_deps << ['hoe', ">= #{VERSION}"] unless hoe_deps.has_key? name
     end
 
     define_tasks
@@ -453,7 +451,7 @@ class Hoe
       dirs = Dir['{lib,ext}']
       s.require_paths = dirs unless dirs.empty?
 
-      s.rdoc_options = ['--main', 'README.txt']
+      s.rdoc_options = ['--main', self.readme]
       s.extra_rdoc_files = s.files.grep(/txt$/)
       s.has_rdoc = true
 
