@@ -10,9 +10,24 @@ class MeowTest < Test::Unit::TestCase
   end
 
   def test_meow_can_register
-    meep = Meow.new('Meow Test', ['Notify'])
+    meep = Meow.new('Meow Test')
     assert_nothing_raised {
-      meep.register
+      meep.register(['Notify'])
+    }
+  end
+
+  def test_meow_can_notify
+    meep = Meow.new('Meow Test')
+    meep.register(['Notify'])
+    assert_nothing_raised {
+      meep.notify('Notify', 'Title', 'Description')
+    }
+  end
+
+  def test_meow_can_notify_without_register
+    meep = Meow.new('Meow Test')
+    assert_nothing_raised {
+      meep.notify('Notify', 'Title', 'Description')
     }
   end
 end
