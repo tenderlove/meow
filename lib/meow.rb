@@ -10,12 +10,27 @@ class Meow
   }
 
   class << self
+    ###
+    # Send a message in one call.
+    #
+    # Example:
+    #   Meow.notify('Meow', 'Title', 'Description', :priority => :very_high)
     def notify(name, title, description, opts = {})
       new(name).notify(title, description, opts)
     end
   end
 
   attr_accessor :name, :note_type, :icon
+
+  ###
+  # Create a new Meow object.
+  #
+  # * +name+ is the application name.
+  # * +note_type+ is the type of note you send.
+  # * +icon+ is the icon displayed in the notification.
+  #
+  # Example:
+  #   note = Meow.new('My Application')
   def initialize(name, note_type = 'Note', icon = OSX::NSWorkspace.sharedWorkspace().iconForFileType_('rb'))
     @name       = name
     @icon       = icon
@@ -23,6 +38,22 @@ class Meow
     @registered = []
   end
 
+  ###
+  # Send a notification to growl.
+  #
+  # * +title+ will be the title of the message.
+  # * +description+ is the description of the message
+  # * +opts+ is a hash of options.
+  #
+  # Possible values for +opts+ are:
+  # * :priority   => Set the note priority
+  # * :icon       => Override the current icon
+  # * :note_type  => Override the current note type
+  #
+  # See Meow::PRIORITIES for the possible priorities.
+  #
+  # Example:
+  #   note.notify('title', 'description', :priority => :very_low)
   def notify(title, description, opts = {})
     opts = {
       :icon       => icon,
