@@ -1,0 +1,7 @@
+History.txt
+Manifest.txt
+README.txt
+Rakefile
+bin/meow
+lib/meow.rb
+test/test_meow.rb
