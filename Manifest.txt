@@ -4,6 +4,7 @@ README.rdoc
 Rakefile
 bin/meow
 lib/meow.rb
+meow.gemspec
 test/helper.rb
 test/test_meow.rb
 vendor/hoe.rb
