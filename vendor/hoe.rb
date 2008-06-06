@@ -2,7 +2,6 @@
 
 require 'rubygems'
 require 'rake'
-require 'rake/contrib/sshpublisher'
 require 'rake/gempackagetask'
 require 'rake/rdoctask'
 require 'rake/testtask'
@@ -64,8 +63,8 @@ require 'yaml'
 # exclude::             A regular expression of files to exclude from
 #                       +check_manifest+.
 # publish_on_announce:: Run +publish_docs+ when you run +release+.
-# signing_key_file:: Signs your gems with this private key.
-# signing_cert_file:: Signs your gem with this certificate.
+# signing_key_file::    Signs your gems with this private key.
+# signing_cert_file::   Signs your gem with this certificate.
 # blogs::               An array of hashes of blog settings.
 #
 # Run +config_hoe+ and see ~/.hoerc for examples.
@@ -116,7 +115,7 @@ require 'yaml'
 #
 
 class Hoe
-  VERSION = '1.5.1'
+  VERSION = '1.5.3'
 
   ruby_prefix = Config::CONFIG['prefix']
   sitelibdir = Config::CONFIG['sitelibdir']
@@ -215,6 +214,11 @@ class Hoe
   attr_accessor :lib_files # :nodoc:
 
   ##
+  # Optional: Array of incompatible versions for multiruby filtering. Used as a regex.
+
+  attr_accessor :multiruby_skip
+
+  ##
   # *MANDATORY*: The name of the release.
 
   attr_accessor :name
@@ -228,6 +232,11 @@ class Hoe
   # Optional: Should package create a zipfile? [default: false]
 
   attr_accessor :need_zip
+
+  ##
+  # Optional: A post-install message to be displayed when gem is installed.
+
+  attr_accessor :post_install_message
 
   ##
   # Optional: A regexp to match documentation files against the manifest.
@@ -310,6 +319,7 @@ class Hoe
     self.description_sections = %w(description)
     self.email = []
     self.extra_deps = []
+    self.multiruby_skip = []
     self.need_tar = true
     self.need_zip = false
     self.rdoc_pattern = /^(lib|bin|ext)|(txt|rdoc)$/
@@ -321,12 +331,18 @@ class Hoe
     self.test_globs = ['test/**/test_*.rb']
     self.readme = 'README.txt'
     self.history = 'History.txt'
+    self.post_install_message = nil
 
     yield self if block_given?
 
     # Intuit values:
 
-    readme   = File.read(self.readme).split(/^(=+ .*)$/)[1..-1]
+    def missing name
+      warn "** #{name} is missing or in the wrong format for auto-intuiting."
+      warn "   run `sow blah` and look at its text files"
+    end
+
+    readme   = File.read(self.readme).split(/^(=+ .*)$/)[1..-1] rescue ''
     unless readme.empty? then
       sections = readme.map { |s|
         s =~ /^=/ ? s.strip.downcase.chomp(':').split.last : s.strip
@@ -336,13 +352,19 @@ class Hoe
       summ = desc.split(/\.\s+/).first(summary_sentences).join(". ")
 
       self.description ||= desc
-      self.changes ||= File.read(self.history).split(/^(===.*)/)[1..2].join.strip
       self.summary ||= summ
       self.url ||= readme[1].gsub(/^\* /, '').split(/\n/).grep(/\S+/)
     else
-      warn "** README.txt is in the wrong format for auto-intuiting."
-      warn "   run sow blah and look at it's text files"
+      missing 'README.txt'
     end
+
+    self.changes ||= begin
+                       h = File.read(self.history)
+                       h.split(/^(===.*)/)[1..2].join.strip
+                     rescue
+                       missing 'History.txt'
+                       ''
+                     end
 
     %w(email author).each do |field|
       value = self.send(field)
@@ -351,7 +373,7 @@ class Hoe
           warn "Hoe #{field} value not set - Fix by 2008-04-01!"
           self.send "#{field}=", "doofus"
         else
-          abort "Hoe #{field} value not set"
+          abort "Hoe #{field} value not set. aborting"
         end
       end
     end
@@ -455,6 +477,8 @@ class Hoe
       s.extra_rdoc_files = s.files.grep(/txt$/)
       s.has_rdoc = true
 
+      s.post_install_message = post_install_message
+
       if test ?f, "test/test_all.rb" then
         s.test_file = "test/test_all.rb"
       else
@@ -471,13 +495,11 @@ class Hoe
       if ENV['INLINE'] then
         s.platform = ENV['FORCE_PLATFORM'] || Gem::Platform::CURRENT
         # name of the extension is CamelCase
-        if name =~ /[A-Z]/
-          # ClassName => class_name
-          alternate_name = name.reverse.scan(%r/[A-Z]+|[^A-Z]*[A-Z]+?/).reverse.map { |word| word.reverse.downcase }.join('_')
-        elsif name =~ /_/
-          # class_name = ClassName
-          alternate_name = name.strip.split(/\s*_+\s*/).map! { |w| w.downcase.sub(/^./) { |c| c.upcase } }.join
-        end
+        alternate_name = if name =~ /[A-Z]/ then
+                           name.gsub(/([A-Z])/, '_\1').downcase.sub(/^_/, '')
+                         elsif name =~ /_/ then
+                           name.capitalize.gsub(/_([a-z])/) { $1.upcase }
+                         end
 
         # Try collecting Inline extensions for +name+
         if defined?(Inline) then
@@ -539,7 +561,7 @@ class Hoe
         puts "rf.add_file #{rubyforge_name.inspect}, #{name.inspect}, release_id, \"#{pkg}.gem\""
       end
 
-      rf = RubyForge.new
+      rf = RubyForge.new.configure
       puts "Logging in"
       rf.login
 
@@ -609,7 +631,7 @@ class Hoe
     task :clean => [ :clobber_docs, :clobber_package ] do
       clean_globs.each do |pattern|
         files = Dir[pattern]
-        rm_rf files unless files.empty?
+        rm_rf files, :verbose => true unless files.empty?
       end
     end
 
@@ -688,7 +710,7 @@ class Hoe
       require 'rubyforge'
       subject, title, body, urls = announcement
 
-      rf = RubyForge.new
+      rf = RubyForge.new.configure
       rf.login
       rf.post_news(rubyforge_name, subject, "#{title}\n\n#{body}")
       puts "Posted to rubyforge"
@@ -703,7 +725,8 @@ class Hoe
       require 'find'
       files = []
       with_config do |config, _|
-        exclusions = config["exclude"] || /tmp$|CVS|\.svn/
+        exclusions = config["exclude"]
+        abort "exclude entry missing from .hoerc. Aborting." if exclusions.nil?
         Find.find '.' do |path|
           next unless File.file? path
           next if path =~ exclusions
@@ -742,7 +765,7 @@ class Hoe
 
         puts "Installed key and certificate."
 
-        rf = RubyForge.new
+        rf = RubyForge.new.configure
         rf.login
 
         cert_package = "#{rubyforge_name}-certificates"
@@ -788,7 +811,11 @@ class Hoe
             tests.map! {|f| %Q(require "#{f}")}
             "#{RUBY_FLAGS} -e '#{tests.join("; ")}' #{FILTER}"
           end
+
+    excludes = multiruby_skip.join(":")
+    ENV['EXCLUDED_VERSIONS'] = excludes
     cmd = "multiruby #{cmd}" if multi
+
     send msg, cmd
   end
 
