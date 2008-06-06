@@ -20,6 +20,10 @@ Send Growl notifications via Ruby.
 * install Growl: http://growl.info
 * sudo gem install meow
 
+== THANKS:
+
+Thanks to the Growl team!  This code is heavily based on their ruby example.
+
 == LICENSE:
 
 (The MIT License)
