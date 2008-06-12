@@ -1,5 +1,8 @@
 require 'osx/cocoa'
 
+# This sets up shared state properly that Cocoa uses.
+OSX::NSApplication.sharedApplication
+
 class Meow
   VERSION = '1.0.0'
   PRIORITIES = {  :very_low   => -2,
@@ -9,6 +12,35 @@ class Meow
                   :emergency  =>  2,
   }
 
+  # addObserver can only be used with subclasses of NSObject, so we use this
+  # one.
+  class Notifier < OSX::NSObject
+    def setup
+      @callbacks = {}
+    end
+
+    def add(prc)
+      pos = @callbacks.size
+      @callbacks[pos] = prc
+      return pos.to_s
+    end
+
+    def clicked(notification)
+      idx = notification.userInfo.objectForKey("ClickContext").to_i
+      begin
+        if block = @callbacks[idx]
+          block.call
+        end
+      ensure
+        @callbacks.delete idx
+      end
+    end
+  end
+
+  # Holds blocks waiting for clicks
+  @@callbacks = Notifier.new
+  @@callbacks.setup
+
   class << self
     ###
     # Send a message in one call.
@@ -17,6 +49,41 @@ class Meow
     #   Meow.notify('Meow', 'Title', 'Description', :priority => :very_high)
     def notify(name, title, description, opts = {})
       new(name).notify(title, description, opts)
+    end
+
+    ##
+    # Convert +image+ to an NSImage that displays nicely in growl. If
+    # +image+ is a String, it's assumed to be the path to an image
+    # on disk and is loaded.
+    def import_image(image, size=128)
+      if image.kind_of? String
+        image = OSX::NSImage.alloc.initWithContentsOfFile image
+      end
+
+      return image if image.size.width.to_i == 128
+
+      new_image = OSX::NSImage.alloc.initWithSize(OSX.NSMakeSize(size, size))
+      new_image.lockFocus
+      image.drawInRect_fromRect_operation_fraction(
+        OSX.NSMakeRect(0, 0, size, size),
+        OSX.NSMakeRect(0, 0, image.size.width, image.size.height),
+        OSX::NSCompositeSourceOver, 1.0)
+      new_image.unlockFocus
+
+      return new_image
+    end
+
+    ##
+    # Call this if you have passed blocks to #notify. This blocks forever, but
+    # it's the only way to properly get events.
+    def run
+      OSX::NSApp.run
+    end
+
+    ##
+    # Call this to cause Meow to stop running.
+    def stop
+      OSX::NSApp.stop(nil)
     end
   end
 
@@ -36,6 +103,17 @@ class Meow
     @icon       = icon
     @note_type  = note_type
     @registered = []
+
+    @pid = OSX::NSProcessInfo.processInfo.processIdentifier
+
+    # The notification name to look for when someone clicks on a notify bubble.
+    @clicked_name = "#{name}-#{@pid}-GrowlClicked!"
+
+    notify_center = OSX::NSDistributedNotificationCenter.defaultCenter
+    notify_center.addObserver_selector_name_object_ @@callbacks,
+                                                    "clicked:",
+                                                    @clicked_name,
+                                                    nil
   end
 
   ###
@@ -44,6 +122,8 @@ class Meow
   # * +title+ will be the title of the message.
   # * +description+ is the description of the message
   # * +opts+ is a hash of options.
+  # * +block+ is an optional block passed to +notify+. The block
+  #   is called when someone clicks on the growl bubble.
   #
   # Possible values for +opts+ are:
   # * :priority   => Set the note priority
@@ -54,32 +134,36 @@ class Meow
   #
   # Example:
   #   note.notify('title', 'description', :priority => :very_low)
-  def notify(title, description, opts = {})
+  def notify(title, description, opts = {}, &block)
     opts = {
       :icon       => icon,
       :sticky     => false,
       :note_type  => note_type,
+      :priority   => 0
     }.merge(opts)
 
     register(opts[:note_type]) unless @registered.include?(opts[:note_type])
 
     notification = {
-      'NotificationName'  => opts[:note_type],
-      'ApplicationName'   => name,
-      'NotificationTitle' => title,
-      'NotificationDescription' => description,
-      'NotificationIcon'  => opts[:icon].TIFFRepresentation(),
+      :ApplicationName   => name,
+      :ApplicationPID    => @pid,
+      :NotificationName  => opts[:note_type],
+      :NotificationTitle => title,
+      :NotificationDescription => description,
+      :NotificationIcon  => opts[:icon].TIFFRepresentation(),
+      :NotificationPriority => opts[:priority].to_i
     }
 
-    notification['NotificationAppIcon'] = opts[:app_icon].TIFFRepresentation if opts[:app_icon]
-    notification['NotificationSticky'] = OSX::NSNumber.numberWithBool_(true) if opts[:stick]
+    notification[:NotificationAppIcon] = opts[:app_icon].TIFFRepresentation if opts[:app_icon]
+    notification[:NotificationSticky] = OSX::NSNumber.numberWithBool_(true) if opts[:stick]
 
-    if opts[:priority]
-      notification['NotificationPriority'] = OSX::NSNumber.numberWithInt_(PRIORITIES[opts[:priority]])
+    notify_center = OSX::NSDistributedNotificationCenter.defaultCenter
+
+    if block
+      notification[:NotificationClickContext] = @@callbacks.add(block)
     end
 
     d = OSX::NSDictionary.dictionaryWithDictionary_(notification)
-    notify_center = OSX::NSDistributedNotificationCenter.defaultCenter
     notify_center.postNotificationName_object_userInfo_deliverImmediately_('GrowlNotification', nil, d, true)
   end
 
@@ -100,4 +184,5 @@ class Meow
     notify_center = OSX::NSDistributedNotificationCenter.defaultCenter
     notify_center.postNotificationName_object_userInfo_deliverImmediately_('GrowlApplicationRegistrationNotification', nil, dictionary, true)
   end
+
 end
