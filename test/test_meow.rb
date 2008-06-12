@@ -1,6 +1,8 @@
 require File.expand_path(File.join(File.dirname(__FILE__), "helper"))
 
 class MeowTest < Test::Unit::TestCase
+  ASSETS = File.expand_path(File.join(File.dirname(__FILE__), "assets"))
+
   def test_initialize
     meep = nil
     assert_nothing_raised {
@@ -33,6 +35,15 @@ class MeowTest < Test::Unit::TestCase
     meep = Meow.new('Meow Test')
     assert_nothing_raised {
       meep.notify('Title', 'Description')
+    }
+  end
+
+  def test_import_image
+    icon = Meow.import_image(File.join(ASSETS, 'aaron.jpeg'))
+    assert_kind_of(OSX::NSImage, icon)
+    meep = Meow.new('Meow Test')
+    assert_nothing_raised {
+      meep.notify('Aaron', 'Icon', :icon => icon)
     }
   end
 end
