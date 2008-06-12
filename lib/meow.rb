@@ -12,6 +12,11 @@ class Meow
                   :emergency  =>  2,
   }
 
+  GROWL_IS_READY = "Lend Me Some Sugar; I Am Your Neighbor!"
+  GROWL_NOTIFICATION_CLICKED = "GrowlClicked!"
+  GROWL_NOTIFICATION_TIMED_OUT = "GrowlTimedOut!"
+  GROWL_KEY_CLICKED_CONTEXT = "ClickedContext"
+
   # addObserver can only be used with subclasses of NSObject, so we use this
   # one.
   class Notifier < OSX::NSObject
@@ -20,13 +25,13 @@ class Meow
     end
 
     def add(prc)
-      pos = @callbacks.size
+      pos = prc.object_id
       @callbacks[pos] = prc
-      return pos.to_s
+      return pos
     end
 
     def clicked(notification)
-      idx = notification.userInfo.objectForKey("ClickContext").to_i
+      idx = notification.userInfo[GROWL_KEY_CLICKED_CONTEXT].to_i
       begin
         if block = @callbacks[idx]
           block.call
