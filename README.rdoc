@@ -11,6 +11,12 @@ Send Growl notifications via Ruby.
   meep = Meow.new('Meow Test')
   meep.notify('Title', 'Description')
 
+  ## Handle clicks
+  meep.notify('Click Me', 'Do it!') do
+    puts "I got clicked!"
+  end
+  Meow.start  # Start blocks
+
 == REQUIREMENTS:
 
 * Growl: http://growl.info
@@ -28,7 +34,7 @@ Thanks to the Growl team!  This code is heavily based on their ruby example.
 
 (The MIT License)
 
-Copyright (c) 2008 Aaron Patterson
+Copyright (c) 2008 Aaron Patterson, Evan Phoenix, Eric Hodel
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the

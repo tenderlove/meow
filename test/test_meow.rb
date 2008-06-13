@@ -46,4 +46,18 @@ class MeowTest < Test::Unit::TestCase
       meep.notify('Aaron', 'Icon', :icon => icon)
     }
   end
+
+  def test_clicks_work
+    $RUBYCOCOA_SUPPRESS_EXCEPTION_LOGGING = true
+    block_called = false
+    assert_raises(RuntimeError) {
+      meep = Meow.new('Meow Test')
+      meep.notify('Click', 'Here') do
+        block_called = true
+        raise 'I do not know how to get run to stop blocking!'
+      end
+      Meow.run
+    }
+    assert block_called
+  end
 end

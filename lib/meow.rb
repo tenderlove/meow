@@ -1,7 +1,5 @@
 require 'osx/cocoa'
-
-# This sets up shared state properly that Cocoa uses.
-OSX::NSApplication.sharedApplication
+require 'meow/notifier'
 
 class Meow
   VERSION = '1.0.0'
@@ -17,30 +15,8 @@ class Meow
   GROWL_NOTIFICATION_TIMED_OUT = "GrowlTimedOut!"
   GROWL_KEY_CLICKED_CONTEXT = "ClickedContext"
 
-  # addObserver can only be used with subclasses of NSObject, so we use this
-  # one.
-  class Notifier < OSX::NSObject
-    def setup
-      @callbacks = {}
-    end
-
-    def add(prc)
-      pos = prc.object_id
-      @callbacks[pos] = prc
-      return pos
-    end
-
-    def clicked(notification)
-      idx = notification.userInfo[GROWL_KEY_CLICKED_CONTEXT].to_i
-      begin
-        if block = @callbacks[idx]
-          block.call
-        end
-      ensure
-        @callbacks.delete idx
-      end
-    end
-  end
+  # This sets up shared state properly that Cocoa uses.
+  @@application = OSX::NSApplication.sharedApplication
 
   # Holds blocks waiting for clicks
   @@callbacks = Notifier.new

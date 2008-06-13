@@ -2,7 +2,9 @@
 
 require 'rubygems'
 require './vendor/hoe.rb'
-require './lib/meow.rb'
+
+$LOAD_PATH << File.join(File.dirname(__FILE__), 'lib')
+require 'meow'
 
 Hoe.new('meow', Meow::VERSION) do |p|
   p.readme  = 'README.rdoc'

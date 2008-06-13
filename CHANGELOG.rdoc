@@ -1,3 +1,11 @@
+=== 1.1.0 / 2008-06-13
+
+* 3 major enhancements
+
+  * Added click callbacks so that Meow can be notified of clicks.
+  * Added Meow.run() to block and wait for clicks
+  * Meow.import_image() returns an image suitable for icon use
+
 === 1.0.0 / 2008-06-05
 
 * 1 major enhancement
