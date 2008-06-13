@@ -3,6 +3,10 @@ require File.expand_path(File.join(File.dirname(__FILE__), "helper"))
 class MeowTest < Test::Unit::TestCase
   ASSETS = File.expand_path(File.join(File.dirname(__FILE__), "assets"))
 
+  def my_method_name
+    /`(.*?)'/.match(caller.first)[1]
+  end
+
   def test_initialize
     meep = nil
     assert_nothing_raised {
@@ -13,28 +17,28 @@ class MeowTest < Test::Unit::TestCase
 
   def test_meow_has_static_method
     assert_nothing_raised {
-      Meow.notify('Meow Test', 'Title', 'Description', :priority => :very_high)
+      Meow.notify('Meow Test', 'Title', my_method_name, :priority => :very_high)
     }
   end
 
   def test_meow_can_notify_with_type
     meep = Meow.new('Meow Test')
     assert_nothing_raised {
-      meep.notify('Title', 'Description', :type => 'Awesome')
+      meep.notify('Title', my_method_name, :type => 'Awesome')
     }
   end
 
   def test_meow_can_notify_with_priority
     meep = Meow.new('Meow Test')
     assert_nothing_raised {
-      meep.notify('Title', 'Description', :priority => :very_high)
+      meep.notify('Title', my_method_name, :priority => :very_high)
     }
   end
 
   def test_meow_can_notify_without_register
     meep = Meow.new('Meow Test')
     assert_nothing_raised {
-      meep.notify('Title', 'Description')
+      meep.notify('Title', my_method_name)
     }
   end
 
@@ -43,7 +47,7 @@ class MeowTest < Test::Unit::TestCase
     assert_kind_of(OSX::NSImage, icon)
     meep = Meow.new('Meow Test')
     assert_nothing_raised {
-      meep.notify('Aaron', 'Icon', :icon => icon)
+      meep.notify('Icon', my_method_name, :icon => icon)
     }
   end
 
@@ -52,7 +56,7 @@ class MeowTest < Test::Unit::TestCase
     block_called = false
     assert_raises(RuntimeError) {
       meep = Meow.new('Meow Test')
-      meep.notify('Click', 'Here') do
+      meep.notify('Click Here', my_method_name) do
         block_called = true
         raise 'I do not know how to get run to stop blocking!'
       end
