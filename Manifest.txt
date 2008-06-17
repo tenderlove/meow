@@ -3,7 +3,9 @@ Manifest.txt
 README.rdoc
 Rakefile
 lib/meow.rb
+lib/meow/notifier.rb
 meow.gemspec
+test/assets/aaron.jpeg
 test/helper.rb
 test/test_meow.rb
 vendor/hoe.rb
