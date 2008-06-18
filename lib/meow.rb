@@ -79,7 +79,7 @@ class Meow
   #
   # Example:
   #   note = Meow.new('My Application')
-  def initialize(name, note_type = 'Note', icon = OSX::NSWorkspace.sharedWorkspace().iconForFileType_('rb'))
+  def initialize(name, note_type = 'Note', icon = OSX::NSWorkspace.sharedWorkspace.iconForFileType('rb'))
     @name       = name
     @icon       = icon
     @note_type  = note_type
@@ -91,10 +91,10 @@ class Meow
     @clicked_name = "#{name}-#{@pid}-GrowlClicked!"
 
     notify_center = OSX::NSDistributedNotificationCenter.defaultCenter
-    notify_center.addObserver_selector_name_object_ @@callbacks,
-                                                    "clicked:",
-                                                    @clicked_name,
-                                                    nil
+    notify_center.objc_send(:addObserver, @@callbacks,
+                            :selector, "clicked:",
+                            :name, @clicked_name,
+                            :object, nil)
   end
 
   ###
@@ -136,7 +136,7 @@ class Meow
     }
 
     notification[:NotificationAppIcon] = opts[:app_icon].TIFFRepresentation if opts[:app_icon]
-    notification[:NotificationSticky] = OSX::NSNumber.numberWithBool_(true) if opts[:stick]
+    notification[:NotificationSticky] = OSX::NSNumber.numberWithBool(true) if opts[:sticky]
 
     notify_center = OSX::NSDistributedNotificationCenter.defaultCenter
 
@@ -144,8 +144,7 @@ class Meow
       notification[:NotificationClickContext] = @@callbacks.add(block)
     end
 
-    d = OSX::NSDictionary.dictionaryWithDictionary_(notification)
-    notify_center.postNotificationName_object_userInfo_deliverImmediately_('GrowlNotification', nil, d, true)
+    notify_center.postNotificationName_object_userInfo_deliverImmediately('GrowlNotification', nil, notification, true)
   end
 
   private
@@ -156,12 +155,13 @@ class Meow
 
     @registered = [@registered, types, default_types].flatten.uniq
 
-    dictionary = OSX::NSDictionary.dictionaryWithDictionary({
-      'ApplicationName'       => name,
-      'AllNotifications'      => OSX::NSArray.arrayWithArray(types),
-      'DefaultNotifications'  => OSX::NSArray.arrayWithArray(default_types),
-      'ApplicationIcon'       => icon.TIFFRepresentation
-    })
+    dictionary = {
+      :ApplicationName       => name,
+      :AllNotifications      => types,
+      :DefaultNotifications  => default_types,
+      :ApplicationIcon       => icon.TIFFRepresentation
+    }
+    
     notify_center = OSX::NSDistributedNotificationCenter.defaultCenter
     notify_center.postNotificationName_object_userInfo_deliverImmediately_('GrowlApplicationRegistrationNotification', nil, dictionary, true)
   end
