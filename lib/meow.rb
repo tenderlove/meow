@@ -2,7 +2,7 @@ require 'osx/cocoa'
 require 'meow/notifier'
 
 class Meow
-  VERSION = '1.1.0'
+  VERSION = '1.1.1'
   PRIORITIES = {  :very_low   => -2,
                   :moderate   => -1,
                   :normal     =>  0,

@@ -1,3 +1,10 @@
+=== 1.1.1
+
+* 2 Bugfixes
+
+  * Updated Ruby/Cocoa syntax conventions
+  * Fixed a typo with "sticky" options
+
 === 1.1.0 / 2008-06-13
 
 * 3 major enhancements
