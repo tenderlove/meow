@@ -29,13 +29,14 @@ Send Growl notifications via Ruby.
 == THANKS:
 
 Thanks to the Growl team!  This code is heavily based on their ruby example.
+Thanks to Satoshi for the click code from Lime Chat.
 
 == LICENSE:
 
 (The MIT License)
 
 Copyright (c) 2008 Aaron Patterson, Evan Phoenix, Eric Hodel
-                   Justin Palmer
+                   Justin Palmer, Satoshi Nakagawa
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the
