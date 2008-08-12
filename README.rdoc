@@ -35,8 +35,14 @@ Thanks to Satoshi for the click code from Lime Chat.
 
 (The MIT License)
 
-Copyright (c) 2008 Aaron Patterson, Evan Phoenix, Eric Hodel
-                   Justin Palmer, Satoshi Nakagawa
+Copyright (c) 2008:
+
+* {Aaron Patterson}[http://tenderlovemaking.com]
+* Evan Phoenix
+* Eric Hodel
+* Justin Palmer
+* Satoshi Nakagawa
+* David Billskog
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the

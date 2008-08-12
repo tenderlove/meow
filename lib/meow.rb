@@ -2,7 +2,7 @@ require 'osx/cocoa'
 require 'meow/notifier'
 
 class Meow
-  VERSION = '1.1.1'
+  VERSION = '2.0.0'
   PRIORITIES = {  :very_low   => -2,
                   :moderate   => -1,
                   :normal     =>  0,
@@ -21,6 +21,9 @@ class Meow
   # Holds blocks waiting for clicks
   @@callbacks = Notifier.new
   @@callbacks.setup
+
+  # The thread that is responsible for catching native callbacks.
+  @@background_runner = nil
 
   class << self
     ###
@@ -53,19 +56,6 @@ class Meow
 
       return new_image
     end
-
-    ##
-    # Call this if you have passed blocks to #notify. This blocks forever, but
-    # it's the only way to properly get events.
-    def run
-      OSX::NSApp.run
-    end
-
-    ##
-    # Call this to cause Meow to stop running.
-    def stop
-      OSX::NSApp.stop(nil)
-    end
   end
 
   attr_accessor :name, :note_type, :icon
@@ -87,14 +77,22 @@ class Meow
 
     @pid = OSX::NSProcessInfo.processInfo.processIdentifier
 
-    # The notification name to look for when someone clicks on a notify bubble.
-    @clicked_name = "#{name}-#{@pid}-GrowlClicked!"
+    # The notification name to look for when someone clicks on a notify bubble
+    # or the bubble is timed out.
+    @clicked_name = "#{name}-#{@pid}-#{GROWL_NOTIFICATION_CLICKED}"
+    @timeout_name = "#{name}-#{@pid}-#{GROWL_NOTIFICATION_TIMED_OUT}"
 
     notify_center = OSX::NSDistributedNotificationCenter.defaultCenter
     notify_center.objc_send(:addObserver, @@callbacks,
                             :selector, "clicked:",
                             :name, @clicked_name,
                             :object, nil)
+    notify_center.objc_send(:addObserver, @@callbacks,
+                            :selector, "timeout:",
+                            :name, @timeout_name,
+                            :object, nil)
+
+    start_runner unless @@background_runner
   end
 
   ###
@@ -164,6 +162,21 @@ class Meow
     
     notify_center = OSX::NSDistributedNotificationCenter.defaultCenter
     notify_center.postNotificationName_object_userInfo_deliverImmediately_('GrowlApplicationRegistrationNotification', nil, dictionary, true)
+  end
+
+  # Hides the infinite callback loop in the background so that it will not
+  # stop the flow of the application.
+  def start_runner
+    @@background_runner = Thread.new do
+      sleep 0.1
+      OSX::NSApp.run
+    end
+    at_exit do
+      loop do
+        sleep 1
+        OSX::NSApplication.sharedApplication.terminate(@@application) if @@callbacks.empty?
+      end
+    end
   end
 
 end

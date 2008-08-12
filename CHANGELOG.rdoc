@@ -1,9 +1,14 @@
-=== 1.1.1
+=== 2.0.0
 
-* 2 Bugfixes
+* 1 Major enhancement
+
+  * Run and stop methods have been removed (Thanks David Billskog!)
+
+* 3 Bugfixes
 
   * Updated Ruby/Cocoa syntax conventions
   * Fixed a typo with "sticky" options
+  * Updated copyright
 
 === 1.1.0 / 2008-06-13
 

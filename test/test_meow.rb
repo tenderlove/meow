@@ -1,4 +1,5 @@
 require File.expand_path(File.join(File.dirname(__FILE__), "helper"))
+require "timeout"
 
 class MeowTest < Test::Unit::TestCase
   ASSETS = File.expand_path(File.join(File.dirname(__FILE__), "assets"))
@@ -50,32 +51,35 @@ class MeowTest < Test::Unit::TestCase
       meep.notify('Icon', my_method_name, :icon => icon)
     }
   end
-  
+
   def test_stickyness
-    $RUBYCOCOA_SUPPRESS_EXCEPTION_LOGGING = true
     block_called = false
-    assert_raises(RuntimeError) {
-      meep = Meow.new('Meow Test')
-      meep.notify('Sticky Test', my_method_name, :sticky => true) do
-        block_called = true
-        raise 'I do not know how to get run to stop blocking!'
-      end
-      Meow.run
-    }
-    assert block_called
+    meep = Meow.new('Meow Test')
+    meep.notify('Sticky Test', my_method_name + "\n(you should not close this by clicking the 'x')", :sticky => true) do
+      block_called = true
+    end
+    while !block_called do
+      sleep 1
+    end
   end
 
   def test_clicks_work
-    $RUBYCOCOA_SUPPRESS_EXCEPTION_LOGGING = true
     block_called = false
-    assert_raises(RuntimeError) {
+    meep = Meow.new('Meow Test')
+    meep.notify('Click Here', my_method_name + "\n(you should not close this by clicking the 'x')", :sticky => true) do
+      block_called = true
+    end
+    while !block_called do
+      sleep 1
+    end
+  end
+
+  def test_run_should_not_block
+    Timeout::timeout(1) do
       meep = Meow.new('Meow Test')
-      meep.notify('Click Here', my_method_name, :sticky => true) do
-        block_called = true
-        raise 'I do not know how to get run to stop blocking!'
+      meep.notify('Non blocking test', my_method_name) do
+        #callback block
       end
-      Meow.run
-    }
-    assert block_called
+    end
   end
 end
