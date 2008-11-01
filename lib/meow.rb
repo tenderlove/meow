@@ -2,7 +2,7 @@ require 'osx/cocoa'
 require 'meow/notifier'
 
 class Meow
-  VERSION = '2.0.0'
+  VERSION = '2.1.0'
   PRIORITIES = {  :very_low   => -2,
                   :moderate   => -1,
                   :normal     =>  0,
@@ -122,6 +122,7 @@ class Meow
     }.merge(opts)
 
     register(opts[:note_type]) unless @registered.include?(opts[:note_type])
+    opts[:icon] = Meow.import_image(opts[:icon]) if opts[:icon].is_a?(String)
 
     notification = {
       :ApplicationName   => name,

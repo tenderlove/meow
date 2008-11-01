@@ -1,8 +1,13 @@
+.autotest
 CHANGELOG.rdoc
 Manifest.txt
 README.rdoc
 Rakefile
+icons/fail.png
+icons/initialize.jpeg
+icons/pass.png
 lib/meow.rb
+lib/meow/autotest.rb
 lib/meow/notifier.rb
 meow.gemspec
 test/assets/aaron.jpeg

@@ -1,3 +1,13 @@
+=== 2.1.0
+
+* 2 Minor enhancements
+
+  * Autotest integration.  Just add this to your .autotest file:
+      require 'meow/autotest'
+  * The icon option now takes a string which is assumed to be the path to an
+    icon.
+
+
 === 2.0.0
 
 * 1 Major enhancement
